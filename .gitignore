@@ -1,2 +1,11 @@
 
 __pycache__/
+output/
+jdk1.8.0_371/
+hadoop/
+hbase/
+pgdata/
+pgrun/
+*.sif
+*.simg
+
