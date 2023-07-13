@@ -8,4 +8,5 @@ pgdata/
 pgrun/
 *.sif
 *.simg
+www/
 
