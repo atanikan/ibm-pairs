@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 # Define the content to add
 ENVIRONMENT_VAR = '''
@@ -8,7 +9,7 @@ export IBM_PAIRS_HOME=/grand/IBM-GSS/atanikanti/ibm-pairs
 # JAVA
 export JAVA_HOME=$IBM_PAIRS_HOME/jdk1.8.0_371
 export PATH=$PATH:$JAVA_HOME/bin
-export _JAVA_OPTIONS="-Djava.io.tmpdir=IBM_PAIRS_HOME/java/tmp\
+export _JAVA_OPTIONS="-Djava.io.tmpdir=$IBM_PAIRS_HOME/java/tmp\
     -XX:-UsePerfData"
 
 # HBASE
@@ -70,20 +71,24 @@ class CreateEnvironment:
                 file.write("\n" + ENVIRONMENT_VAR)
             print(f"Environment variables added to {self.user_profile_path}")
             return True
-            
+    
+    def load_modules(self) -> None:
+        """ Load required modules
+        """
+        print("here")
+        subprocess.run('module load singularity', shell=True)
+
     def run_setup(self) -> None:
         """ Creates environment variables needed for running hbase, hadoop
         """
         self.fetchUserProfileFile()
         self.readUserProfileFile()
         self.writeToProfile()
+        self.load_modules()
     
     def execute(self) -> None:
         os.system(f"source {self.user_profile_path}")
         
 
 
-# Test
-envir = CreateEnvironment()
-envir.run_setup()
-#envir.execute()
+

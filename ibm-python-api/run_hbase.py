@@ -2,7 +2,8 @@ import subprocess
 import os
 
 class RunHbase:
-    def __init__(self, input_file, worker_file, hbase_site_file):
+    def __init__(self, hbase_home, input_file, worker_file, hbase_site_file):
+        self.hbase_home = hbase_home
         self.input_file = input_file
         self.worker_file = worker_file
         self.hbase_site_file = hbase_site_file
@@ -21,7 +22,7 @@ class RunHbase:
         with open(self.input_file, "r") as f:
             content = f.readlines()
             if len(content) > 1:
-                region_server_nodes = content[1:]
+                region_server_nodes = content[1:2]
             else:
                 region_server_nodes = [content.strip()]
 
@@ -37,8 +38,8 @@ class RunHbase:
         with open(self.hbase_site_file, "r") as f:
             lines = f.readlines()
         replacements = {
-            "<name>hbase.rootdir</name>":  "<value>file://" + os.environ["HBASE_HOME"] + "/data</value>",
-            "<name>hbase.zookeeper.property.dataDir</name>": "<value>" + os.environ["HBASE_HOME"] + "/zookeeper-data</value>",
+            "<name>hbase.rootdir</name>":  "<value>file://" + self.hbase_home + "/data</value>",
+            "<name>hbase.zookeeper.property.dataDir</name>": "<value>" + self.hbase_home + "/zookeeper-data</value>",
             "<name>hbase.zookeeper.quorum</name>": "<value>" + self.master_ip + "</value>",
             "<name>hbase.master.hostname</name>": "<value>" + self.master_ip + "</value>"
         }
@@ -54,31 +55,23 @@ class RunHbase:
         with open(self.hbase_site_file, "w") as f:
             f.writelines(lines)
 
-    def start_hbase(self) -> None:
+    def start_hbase(self, start_hbase_file) -> None:
         """ Starts hbase
         """
-        print("Starting hbase", os.environ["HBASE_HOME"] + "/bin/start-hbase.sh")
-        subprocess.run([os.environ["HBASE_HOME"] + "/bin/start-hbase.sh"], shell=True)
+        print("Starting hbase", start_hbase_file)
+        subprocess.run([start_hbase_file], shell=True)
     
-    def stop_hbase(self) -> None:
+    def stop_hbase(self, stop_hbase_file) -> None:
         """ Stops hbase
         """
-        print("Stopping hbase", os.environ["HBASE_HOME"] + "/bin/stop-hbase.sh")
-        subprocess.run([os.environ["HBASE_HOME"] + "/bin/stop-hbase.sh"], shell=True)
+        print("Stopping hbase", stop_hbase_file)
+        subprocess.run([stop_hbase_file], shell=True)
 
     def run_setup(self) -> None:
-        """ Runs Hbase
+        """ Runs Hbase setup
         """
         self.get_master_ip()
         self.write_worker_ips()
         self.replace_config_values()
 
-# Usage
-input_file = os.environ["PBS_NODEFILE"]
-worker_file = os.environ["HBASE_HOME"] + "/conf/regionservers"
-hbase_site_file = os.environ["HBASE_HOME"] + "/conf/hbase-site.xml"
 
-hbase = RunHbase(input_file, worker_file, hbase_site_file)
-#hbase.run_setup()
-#hbase.start_hbase()
-hbase.stop_hbase()

@@ -2,7 +2,8 @@ import subprocess
 import os
 
 class RunHadoop:
-    def __init__(self, input_file, worker_file, yarn_site_file):
+    def __init__(self, hadoop_home, input_file, worker_file, yarn_site_file):
+        self.hadoop_home = hadoop_home
         self.input_file = input_file
         self.worker_file = worker_file
         self.yarn_site_file = yarn_site_file
@@ -21,7 +22,7 @@ class RunHadoop:
         with open(self.input_file, "r") as f:
             content = f.readlines()
             if len(content) > 1:
-                worker_nodes = content[1:]
+                worker_nodes = content[1:2]
             else:
                 worker_nodes = [content.strip()]
         with open(self.worker_file, "w") as f:
@@ -50,17 +51,17 @@ class RunHadoop:
         with open(self.yarn_site_file, "w") as f:
             f.writelines(lines)
 
-    def start_hadoop(self) -> None:
+    def start_hadoop(self, start_hadoop_file) -> None:
         """ Starts hbase
         """
-        print("Starting hadoop/yarn", os.environ["HADOOP_HOME"] + "/sbin/start-hbase.sh")
-        subprocess.run([os.environ["HADOOP_HOME"] + "/sbin/start-yarn.sh"], shell=True)
+        print("Starting hadoop/yarn", start_hadoop_file)
+        subprocess.run([start_hadoop_file], shell=True)
     
-    def stop_hadoop(self) -> None:
+    def stop_hadoop(self, stop_hadoop_file) -> None:
         """ Stops hbase
         """
-        print("Stopping hbase", os.environ["HADOOP_HOME"] + "/sbin/stop-yarn.sh")
-        subprocess.run([os.environ["HADOOP_HOME"] + "/sbin/stop-yarn.sh"], shell=True)
+        print("Stopping hadoop/yarn", stop_hadoop_file)
+        subprocess.run([stop_hadoop_file], shell=True)
 
     def run_setup(self) -> None:
         """ Runs Hbase
@@ -69,12 +70,4 @@ class RunHadoop:
         self.write_worker_ips()
         self.replace_config_values()
 
-# Usage
-input_file = os.environ["PBS_NODEFILE"]
-worker_file = os.environ["HADOOP_HOME"] + "/etc/hadoop/slaves"
-yarn_site_file = os.environ["HADOOP_HOME"] + "/etc/hadoop/yarn-site.xml"
 
-hadoop = RunHadoop(input_file, worker_file, yarn_site_file)
-#hadoop.run_setup()
-#hadoop.start_hadoop()
-hadoop.stop_hadoop()

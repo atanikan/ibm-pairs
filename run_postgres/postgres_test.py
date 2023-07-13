@@ -5,7 +5,7 @@ conn = psycopg2.connect(
     database="mydb",
     user="pguser",
     password="mypguser123",
-    host="localhost",
+    host="x3209c0s7b1n0.hsn.cm.polaris.alcf.anl.gov",
     port="5432"
 )
 
