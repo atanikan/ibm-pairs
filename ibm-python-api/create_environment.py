@@ -1,29 +1,35 @@
 import os
 import subprocess
+import re
 
 # Define the content to add
 ENVIRONMENT_VAR = '''
-#IBM_PAIRS_HOME
-export IBM_PAIRS_HOME=/grand/IBM-GSS/atanikanti/ibm-pairs
+# IBM_PAIRS_HOME
+export SQL_PAIRS_HOME=/grand/IBM-GSS/atanikanti/ibm-pairs
+export IBM_PAIRS_HOME=/grand/IBM-GSS/lustredata
 
 # JAVA
 export JAVA_HOME=$IBM_PAIRS_HOME/jdk1.8.0_371
 export PATH=$PATH:$JAVA_HOME/bin
-export _JAVA_OPTIONS="-Djava.io.tmpdir=$IBM_PAIRS_HOME/java/tmp\
-    -XX:-UsePerfData"
+export _JAVA_OPTIONS="-Djava.io.tmpdir=$IBM_PAIRS_HOME/java/tmp    -XX:-UsePerfData"
 
 # HBASE
-export RUN_HBASE=$IBM_PAIRS_HOME/run_hbase
+export RUN_HBASE=$IBM_PAIRS_HOME
 export HBASE_HOME=$RUN_HBASE/hbase
 export PATH=$PATH:$HBASE_HOME/bin
 
 # HADOOP
-export RUN_HADOOP=$IBM_PAIRS_HOME/run_hadoop
+export RUN_HADOOP=$IBM_PAIRS_HOME
 export HADOOP_HOME=$RUN_HADOOP/hadoop
 export PATH=$PATH:$HADOOP_HOME/bin
 
 # POSTGRES
 export RUN_POSTGRES=$IBM_PAIRS_HOME/run_postgres
+export POSTGRES_HOME=$RUN_POSTGRES/PostgreSQL
+export PATH=$PATH:$POSTGRES_HOME/bin
+
+# RABBITMQ
+export RUN_RABBITMQ=$IBM_PAIRS_HOME/run_rabbitmq
 
 # PROXY
 export HTTP_PROXY="http://proxy-01.pub.alcf.anl.gov:3128"
@@ -35,9 +41,10 @@ export no_proxy="admin,polaris-adminvm-01,localhost,*.cm.polaris.alcf.anl.gov,po
 
 
 class CreateEnvironment:
-    def __init__(self) -> None:
+    def __init__(self,input_file) -> None:
         self.user_profile_path = None
         self.user_profile_content = None
+        self.input_file = input_file
     
     def fetchUserProfileFile(self) -> None:
         # Determine the shell profile file based on the user's shell
@@ -52,7 +59,8 @@ class CreateEnvironment:
             print("Unsupported shell profile")
             exit(1)
         self.user_profile_path = os.path.join(os.path.expanduser("~"), profile_file) 
-    
+        return self.user_profile_path
+
     def readUserProfileFile(self) -> None:
         """
             Reads user profile file
@@ -89,6 +97,20 @@ class CreateEnvironment:
     def execute(self) -> None:
         os.system(f"source {self.user_profile_path}")
         
+    def replace_hidden_files_hostnames(self) -> None:
+        """ Replace Psql password """
+        variables = {}
+        with open(self.input_file, "r") as f:
+            hostname = f.readline().strip()
+        with open(os.path.expanduser('~/.netrc'), 'r') as f:
+            content = f.read()
+        # Check if the POSTGRESHOST line exists
+        if re.search(r'machine ([^\s]+)', content):
+            content = re.sub(r'machine ([^\s]+)', f'machine {hostname}', content)
+        print(content)
+        #Write the modified content back to the bashrc file
+        with open(os.path.expanduser('~/.netrc'), 'w') as f:
+             f.write(content)
 
 
 

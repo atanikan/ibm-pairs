@@ -1,6 +1,0 @@
-virtualmachines:
-  hosts:
-    vm01:
-      ansible_host: x3005c0s1b1n0.hsn.cm.polaris.alcf.anl.gov
-    vm02:
-      ansible_host: x3005c0s25b0n0.hsn.cm.polaris.alcf.anl.gov
