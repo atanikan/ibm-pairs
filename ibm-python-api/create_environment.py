@@ -97,20 +97,20 @@ class CreateEnvironment:
     def execute(self) -> None:
         os.system(f"source {self.user_profile_path}")
         
-    def replace_hidden_files_hostnames(self) -> None:
-        """ Replace Psql password """
-        variables = {}
+    def replace_files_hostnames(self,pairs_core_path=None) -> None:
+        """ Replace hostnames in hidden files """
         with open(self.input_file, "r") as f:
             hostname = f.readline().strip()
+        
+        # Replace netrc file
         with open(os.path.expanduser('~/.netrc'), 'r') as f:
             content = f.read()
-        # Check if the POSTGRESHOST line exists
+        # Check if the machine line exists
         if re.search(r'machine ([^\s]+)', content):
             content = re.sub(r'machine ([^\s]+)', f'machine {hostname}', content)
         print(content)
-        #Write the modified content back to the bashrc file
+        #Write the modified content back to the netrc file
         with open(os.path.expanduser('~/.netrc'), 'w') as f:
              f.write(content)
-
 
 

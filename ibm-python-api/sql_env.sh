@@ -1,3 +1,3 @@
-iJAVA_OPTS=-Dpuid=${PUID} 
+#iJAVA_OPTS=-Dpuid=${PUID} 
 JAVA_OPTS=-Dpuid=${PUID} 
 

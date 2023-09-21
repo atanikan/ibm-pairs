@@ -1,72 +1,88 @@
 import subprocess
 import os
-import re
-from create_environment import CreateEnvironment
+import time
 
 class Runrabbitmq:
-    def __init__(self, input_file, env_file):
-        self.input_file = input_file
+    def __init__(self, env_file, rabbitmq_host):
         self.env_file = env_file
-        with open(self.input_file, "r") as f:
-            content = f.readlines()
-            if len(content) > 1:
-                rabbit_node = content[-1].strip()
-            else:
-                rabbit_node = content.strip()
-        self.rabbit_hostname = rabbit_node
-        print("RABBIT MQ HOSTNAME",self.rabbit_hostname)
+        self.rabbitmq_host = rabbitmq_host
 
-
-    def start_and_run_rabbitmq_instance(self, rabbit_image_file, rabbit_dir):
+    def start_rabbitmq_instance(self, rabbit_image_file, rabbit_dir):
         """ Start rabbitmq using singularity
         """
-        start_and_run_rabbit_instance = f'module load singularity &&\
-            singularity instance start -B {rabbit_dir}:/var/lib/rabbitmq {rabbit_image_file} rabbitmq &&\
-            singularity run --env-file {self.env_file} instance://rabbitmq & &&\
-                exit'
-        test_instance = f'module load singularity && singularity instance start -B {rabbit_dir}:/var/lib/rabbitmq {rabbit_image_file} rabbitmq'
-        start_and_run_rabbit_instance_var = ['ssh', self.rabbit_hostname,
-                                             test_instance]
-        run_var = ['ssh',self.rabbit_hostname,f'module load singularity && singularity run --env-file {self.env_file} instance://rabbitmq &']
-        print("Starting Instance", start_and_run_rabbit_instance_var)
+        # start_and_run_rabbit_instance = f'module load singularity &&\
+        #     singularity instance start -B {rabbit_dir}:/var/lib/rabbitmq {rabbit_image_file} rabbitmq &&\
+        #     singularity run --env-file {self.env_file} instance://rabbitmq & &&\
+        #         exit'
+        start_instance = f'module load singularity && singularity instance start -B {rabbit_dir}:/var/lib/rabbitmq {rabbit_image_file} rabbitmq'
+        start_rabbit_instance_var = ['ssh', self.rabbitmq_host,
+                                             start_instance]
+        print("Starting Instance", start_rabbit_instance_var)
         try:
-            output = subprocess.check_output(start_and_run_rabbit_instance_var, stderr=subprocess.STDOUT)
+            output = subprocess.Popen(start_rabbit_instance_var)
             print(output)
         except subprocess.CalledProcessError as e:
             print(f"Command failed with error: {e.output}")
-        print("Running Instance", run_var)
-        subprocess.Popen(run_var)
-        return None
+        # print("Running Instance", run_var)
+        # subprocess.Popen(run_var)
 
-
-    def stop_rabbitmq_instance(self):
-        """ Stop rabbitmq """
-        run_var = ['ssh',self.rabbit_hostname,f'module load singularity && singularity instance stop rabbitmq']
+    def run_rabbitmq_instance(self):
+        """ Run rabbitmq using singularity
+        """
+        run_instance = f'module load singularity && singularity run --env-file {self.env_file} instance://rabbitmq &'
+        # run_var = ['ssh',self.rabbitmq_host,]
+        # start_and_run_rabbit_instance = f'module load singularity &&\
+        #     singularity instance start -B {rabbit_dir}:/var/lib/rabbitmq {rabbit_image_file} rabbitmq &&\
+        #     singularity run --env-file {self.env_file} instance://rabbitmq & &&\
+        #         exit'
+        # test_instance = f'module load singularity && singularity instance start -B {rabbit_dir}:/var/lib/rabbitmq {rabbit_image_file} rabbitmq'
+        run_rabbit_instance_var = ['ssh', self.rabbitmq_host,
+                                             run_instance]
+        print("Running Instance", run_rabbit_instance_var)
         try:
-            output = subprocess.check_output(run_var, stderr=subprocess.STDOUT)
+            output = subprocess.Popen(run_rabbit_instance_var)
+            # output = subprocess.check_output(start_and_run_rabbit_instance_var, stderr=subprocess.STDOUT)
+            print(output)
+        except subprocess.CalledProcessError as e:
+            print(f"Command failed with error: {e.output}")
+
+    @staticmethod
+    def stop_rabbitmq_instance(rabbitmq_host):
+        """ Stop rabbitmq """
+        stop_var = ['ssh', rabbitmq_host,f'module load singularity && singularity instance stop rabbitmq']
+        try:
+            output = subprocess.check_output(stop_var, stderr=subprocess.STDOUT)
             print(output)
             return output
         except subprocess.CalledProcessError as e:
             print(f"Command failed with error: {e.output}")
         return None
 
-    def replace_rabbitmq_host(self):
-        """ Replace Psql password """
-        variables = {}
-        # format the string
-        create_env = CreateEnvironment(self.input_file)
-        user_profile_file = create_env.fetchUserProfileFile()
-        with open(user_profile_file, 'r') as f:
-            content = f.read()
-        # Check if the POSTGRESHOST line exists
-        if re.search(r'export RABBITMQHOST=([^\s]+)', content):
-            content = re.sub(r'export RABBITMQHOST=([^\s]+)', f'export RABBITMQHOST={self.rabbit_hostname}', content)
-        #Write the modified content back to the bashrc file
-        with open(user_profile_file, 'w') as f:
-             f.write(content)
-        print("SOURCE YOUR BASHRC/PROFILE")
-
 #Run rabbitmq
+ # # Create Pairs environment
+# input_file = os.environ["PBS_NODEFILE"]
+# with open(input_file, "r") as f:
+#     hostnames = [line.strip() for line in f]
+# if len(hostnames) == 1: #If only one node adding same node to the list
+#     hostnames.append(hostnames[0])
+# # Run rabbitmq
+# rabbitmq_home = os.environ["RUN_RABBITMQ"]
+# rabbitmq_image_file = rabbitmq_home + "/rabbitmq_latest.sif"
+# rabbitmq_dir = rabbitmq_home + "/rabbitmq"
+# env_file = rabbitmq_home + "/mq.env"
+# rabbitmq_host = hostnames[1]
+# rabbitmq = Runrabbitmq(env_file, rabbitmq_host)
+# rabbitmq.start_rabbitmq_instance(rabbitmq_image_file,rabbitmq_dir)
+# print(f"Started rabbitmq on {rabbitmq_host}")
+# time.sleep(3)
+# rabbitmq.run_rabbitmq_instance()
+# print(f"Running rabbitmq on {rabbitmq_host}")
+# os.environ['RABBITMQHOST'] = rabbitmq_host
+# time.sleep(10)
+# Runrabbitmq.stop_rabbitmq_instance(rabbitmq_host)
+
+
+
 # input_file = os.environ["PBS_NODEFILE"]
 # rabbitmq_home = os.environ["RUN_RABBITMQ"]
 # rabbitmq_image_file = rabbitmq_home + "/rabbitmq_latest.sif"
@@ -74,4 +90,4 @@ class Runrabbitmq:
 # env_file = rabbitmq_home + "/mq.env"
 # rabbitmq = Runrabbitmq(input_file, env_file)
 # rabbitmq.start_and_run_rabbitmq_instance(rabbitmq_image_file,rabbitmq_dir)
-#rabbitmq.stop_rabbitmq_instance()
+# #rabbitmq.stop_rabbitmq_instance()

@@ -9,4 +9,6 @@ pgrun/
 *.sif
 *.simg
 www/
+envs/
+for_anl/
 
