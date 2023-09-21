@@ -31,7 +31,7 @@ export PATH=$PATH:$HADOOP_HOME/bin
 export RUN_POSTGRES=$IBM_PAIRS_HOME/run_postgres
 export POSTGRES_HOME=$RUN_POSTGRES/PostgreSQL
 export PATH=$PATH:$POSTGRES_HOME/bin
-alias pairs_sql='psql -h x3005c0s31b0n0.hsn.cm.polaris.alcf.anl.gov -d pairs -U pairs_db_master'
+#alias pairs_sql='psql -h x3005c0s31b0n0.hsn.cm.polaris.alcf.anl.gov -d pairs -U pairs_db_master'
 
 # RABBITMQ
 export RUN_RABBITMQ=$IBM_PAIRS_HOME/run_rabbitmq

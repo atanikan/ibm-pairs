@@ -1,0 +1,10 @@
+{
+ "name": "new modis upload test 2",
+ "description_short" : "modis uploads tiles from jan 1, 2023",
+ "description_long" : "uploading some tiles from jan 1, 2023",
+ "category": {
+   "id": "5"
+ },
+ "level": "18",
+ "crs" : "EPSG:4326"
+}
